@@ -1,0 +1,16 @@
+macro(common_setup)
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+
+    find_program(CCACHE ccache REQUIRED)
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE})
+
+    find_program(ALTERNATIVE_LINKER ld.mold REQUIRED)
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+        add_link_options("-B/usr/lib/mold")
+    else ()
+        add_link_options("-fuse-ld=${ALTERNATIVE_LINKER}")
+    endif ()
+endmacro()
