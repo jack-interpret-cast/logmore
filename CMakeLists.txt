@@ -1,26 +1,35 @@
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
-project(logless)
+project(src LANGUAGES CXX)
 
-include(${CMAKE_SOURCE_DIR}/cmake/project_settings.cmake)
+include(cmake/project_settings.cmake)
 common_setup()
 
 # Setup Externals
-include(FetchContent)
-set(FETCHCONTENT_UPDATES_DISCONNECTED True)
 FetchContent_Declare(boost_pfr
         GIT_REPOSITORY https://github.com/boostorg/pfr.git
         GIT_TAG 2.0.3
         GIT_SHALLOW ON
-        GIT_PROGRESS ON
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         )
 FetchContent_MakeAvailable(boost_pfr)
 
-add_executable(logless
-        main.cpp
+FetchContent_Declare(fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+        GIT_TAG master
+        GIT_SHALLOW ON
         )
-target_compile_options(logless
-        PRIVATE -Wall -Wextra -Werror
+FetchContent_MakeAvailable(fmt)
+
+FetchContent_Declare(googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.11.0
+        GIT_SHALLOW ON
         )
+FetchContent_MakeAvailable(googletest)
+
+add_subdirectory(include)
+add_subdirectory(src)
+add_subdirectory(test)
+
