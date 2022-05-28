@@ -7,19 +7,27 @@ macro(common_setup)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
     # Faster compilation
-    find_program(CCACHE ccache REQUIRED)
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
-    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE})
-
-    # Faster linking
-    find_program(ALTERNATIVE_LINKER ld.mold REQUIRED)
-    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-        add_link_options("-B/usr/lib/mold")
+    find_program(CCACHE ccache)
+    if (${CCACHE} STREQUAL "CCACHE-NOTFOUND")
+        message(WARNING "ccache not found")
     else ()
-        add_link_options("-fuse-ld=${ALTERNATIVE_LINKER}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
+        set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE})
     endif ()
 
+    # Faster linking
+    find_program(ALTERNATIVE_LINKER ld.mold)
+    if (${ALTERNATIVE_LINKER} STREQUAL "ALTERNATIVE_LINKER-NOTFOUND")
+        message(WARNING "mold linker not found")
+    else ()
+        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+            add_link_options("-B/usr/lib/mold")
+        else ()
+            add_link_options("-fuse-ld=${ALTERNATIVE_LINKER}")
+        endif ()
+    endif ()
 
+    # Common lib/exe properties
     add_library(project_options INTERFACE)
     add_library(logmore::compile_options ALIAS project_options)
     target_compile_features(project_options INTERFACE cxx_std_${CMAKE_CXX_STANDARD})

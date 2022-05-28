@@ -5,6 +5,7 @@
 #include <boost/pfr.hpp>
 #include <fmt/format.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,7 +24,7 @@ template <typename T> struct ConfigOption
     /* Constructor for required arguement */
     explicit ConfigOption(std::string helpText) : help_text(std::move(helpText)) {}
 
-    bool parse(std::vector<std::string_view>& args)
+    bool parse(std::vector<std::string>& args)
     {
         if (args.empty()) return true;
         if (long_name.empty())
@@ -41,12 +42,23 @@ template <typename T> struct ConfigOption
                 {
                     _data = parse_detail<T>(*(iter + 1));
                     args.erase(iter, iter + 2);
-                    break;
                 } else
                 {
                     fmt::print(fmt::style::warn, "Missing argument for option'--{}'\n", long_name);
-                    return true;
                 }
+                break;
+            } else if (auto pos = check_short_name_option(*iter); pos)
+            {
+                if (++*pos == iter->length())
+                {
+                    _data = parse_detail<T>(*(iter + 1));
+                    iter->length() > 1 ? args.erase(iter + 1, iter + 2)
+                                       : args.erase(iter, iter + 2);
+                } else
+                {
+                    fmt::print(fmt::style::warn, "Missing argument for option'-{}'\n", short_name);
+                }
+                break;
             }
         }
         return false;
@@ -59,11 +71,11 @@ template <typename T> struct ConfigOption
     const std::string help_text;
 
 private:
-    template <typename Value> Value parse_detail(std::string_view)
+    template <typename Value> Value parse_detail(std::string_view) const
     {
         static_assert(sizeof(Value) == 0 && "There is no parser for type T");
     }
-    template <> int parse_detail(std::string_view arg)
+    template <> [[nodiscard]] int parse_detail(std::string_view arg) const
     {
         try
         {
@@ -74,19 +86,32 @@ private:
             return 0;
         }
     }
-    template <> std::string parse_detail(std::string_view arg) { return std::string{arg}; }
-
+    template <> [[nodiscard]] std::string parse_detail(std::string_view arg) const
+    {
+        return std::string{arg};
+    }
+    std::optional<size_t /*is end*/> check_short_name_option(std::string& arg)
+    /* Looks for valid config short name in arg, if found return index */
+    {
+        auto pos = arg.find_last_of(short_name);
+        if (pos == std::string_view::npos || arg.length() < 2 || arg[0] != '-'
+            || !std::isalpha(arg[1]))
+            return {};
+        arg.erase(pos, 1);
+        return --pos;
+    }
     T _data;
 };
 
-template <> bool ConfigOption<bool>::parse(std::vector<std::string_view>& args)
+template <> bool ConfigOption<bool>::parse(std::vector<std::string>& args)
 /* We assume if this option is set, then it must be true */
 {
     for (auto iter = args.begin(); iter < args.end(); ++iter)
     {
-        if (*iter == "--" + long_name)
+        if (auto pos = check_short_name_option(*iter); *iter == "--" + long_name || pos)
         {
             _data = true;
+            if (pos && iter->length() > 1) break;
             args.erase(iter, ++iter);
             break;
         }
@@ -106,7 +131,8 @@ template <typename F, typename ConfigT> bool visit_struct(F&& functor, ConfigT& 
 
 template <typename ConfigT> ConfigT parse_command_line(int argc, char* argv[])
 {
-    std::vector<std::string_view> args;
+    // TODO: Ensure config does not contain multiple options with same name
+    std::vector<std::string> args;
     for (ssize_t i = 1; i < argc; ++i)
         args.emplace_back(argv[i]);
 
@@ -114,11 +140,10 @@ template <typename ConfigT> ConfigT parse_command_line(int argc, char* argv[])
 
     ConfigT config;
 
-    auto functor = [&args](auto& config) { return config.parse(args); };
+    auto functor     = [&args](auto& config) { return config.parse(args); };
     bool parse_error = visit_struct(functor, config);
-    if (parse_error)
-        fmt::print(fmt::style::warn, "There was an error parsing config options\n");
-    if (!args. empty() && !parse_error) // Avoid warning about same error twice
+    if (parse_error) fmt::print(fmt::style::warn, "There was an error parsing config options\n");
+    if (!args.empty() && !parse_error) // Avoid warning about same error twice
         fmt::print(fmt::style::warn, "There were unparsed arguements: {}\n", fmt::join(args, " "));
     return config;
 }
