@@ -75,7 +75,11 @@ private:
     {
         static_assert(sizeof(Value) == 0 && "There is no parser for type T");
     }
-    template <> [[nodiscard]] int parse_detail(std::string_view arg) const
+    // Compiling with GCC will throw error: "explicit specialization in non-namespace scope ‘struct
+    // ConfigOption<T>" template <> [[nodiscard]] int parse_detail(std::string_view arg) const This
+    // is actually a bug in GCC: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282 Workaround
+    // below:
+    template <std::same_as<int> Value> [[nodiscard]] int parse_detail(std::string_view arg) const
     {
         try
         {
@@ -86,7 +90,8 @@ private:
             return 0;
         }
     }
-    template <> [[nodiscard]] std::string parse_detail(std::string_view arg) const
+    template <std::same_as<std::string> Value>
+    [[nodiscard]] std::string parse_detail(std::string_view arg) const
     {
         return std::string{arg};
     }
@@ -112,7 +117,7 @@ template <> bool ConfigOption<bool>::parse(std::vector<std::string>& args)
         {
             _data = true;
             if (pos && iter->length() > 1) break;
-            args.erase(iter, ++iter);
+            args.erase(iter, iter + 1);
             break;
         }
     }
