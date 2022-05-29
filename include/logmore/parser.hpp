@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 
 #include <concepts>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -82,20 +83,44 @@ private:
     // ConfigOption<T>" template <> [[nodiscard]] int parse_detail(std::string_view arg) const This
     // is actually a bug in GCC: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282 Workaround
     // below:
-    template <std::same_as<int> Value>
-    [[nodiscard]] int parse_detail(std::string_view arg) const
+    template <std::signed_integral Value>
+    [[nodiscard]] Value parse_detail(std::string_view arg) const
     {
         try
         {
-            return std::stoi(arg.data());
+            return std::stol(arg.data());
         } catch (const std::invalid_argument& e)
         {
             fmt::print(fmt::style::warn, "Could not convert '{}' to integer\n", arg);
             return 0;
         }
     }
+    template <std::unsigned_integral Value>
+    [[nodiscard]] Value parse_detail(std::string_view arg) const
+    {
+        try
+        {
+            return std::stoul(arg.data());
+        } catch (const std::invalid_argument& e)
+        {
+            fmt::print(fmt::style::warn, "Could not convert '{}' to integer\n", arg);
+            return 0;
+        }
+    }
+    template <std::floating_point Value>
+    [[nodiscard]] Value parse_detail(std::string_view arg) const
+    {
+        try
+        {
+            return std::stod(arg.data());
+        } catch (const std::invalid_argument& e)
+        {
+            fmt::print(fmt::style::warn, "Could not convert '{}' to floating point\n", arg);
+            return 0;
+        }
+    }
     template <std::same_as<std::string> Value>
-    [[nodiscard]] std::string parse_detail(std::string_view arg) const
+    [[nodiscard]] Value parse_detail(std::string_view arg) const
     {
         return std::string{arg};
     }
@@ -141,9 +166,24 @@ bool visit_struct(F&& functor, ConfigT& config)
 }
 
 template <typename ConfigT>
-ConfigT parse_command_line(int argc, char* argv[])
+bool validate_config_struct(const ConfigT& config)
 {
-    // TODO: Ensure config does not contain multiple options with same name
+    std::map<std::string_view, size_t> long_names;
+    auto check_long_names = [&long_names](auto& config_opt) {
+        return long_names[config_opt.long_name]++;
+    };
+    std::map<char, size_t> short_names;
+    auto check_short_names = [&short_names](auto& config_opt) {
+        return config_opt.short_name != '\0' && short_names[config_opt.short_name]++;
+    };
+    bool short_dups = visit_struct(check_short_names, config);
+    bool long_dups  = visit_struct(check_long_names, config);
+    return short_dups || long_dups;
+}
+
+template <typename ConfigT>
+std::optional<ConfigT> parse_command_line(int argc, char* argv[])
+{
     std::vector<std::string> args;
     for (ssize_t i = 1; i < argc; ++i)
         args.emplace_back(argv[i]);
@@ -151,11 +191,22 @@ ConfigT parse_command_line(int argc, char* argv[])
     fmt::print("Got cmd args: {}\n", fmt::join(args, ","));
 
     ConfigT config;
+    if (validate_config_struct(config))
+    {
+        fmt::print(fmt::style::warn, "Some configs had a duplicated name\n");
+        return {};
+    }
 
-    auto functor     = [&args](auto& config) { return config.parse(args); };
-    bool parse_error = visit_struct(functor, config);
-    if (parse_error) fmt::print(fmt::style::warn, "There was an error parsing config options\n");
-    if (!args.empty() && !parse_error) // Avoid warning about same error twice
+    auto parse = [&args](auto& config_opt) { return config_opt.parse(args); };
+    if (visit_struct(parse, config))
+    {
+        fmt::print(fmt::style::warn, "There was an error parsing config options\n");
+        return {};
+    }
+    if (!args.empty())
+    {
         fmt::print(fmt::style::warn, "There were unparsed arguements: {}\n", fmt::join(args, " "));
+        return {};
+    }
     return config;
 }
