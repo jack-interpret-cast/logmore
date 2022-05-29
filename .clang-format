@@ -6,7 +6,7 @@ AlignConsecutiveAssignments: Consecutive
 AllowShortBlocksOnASingleLine: Always
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: WithoutElse
-AlwaysBreakTemplateDeclarations: No
+AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterClass: true

@@ -28,8 +28,8 @@ FetchContent_Declare(googletest
         GIT_SHALLOW ON
         )
 FetchContent_MakeAvailable(googletest)
-
 add_subdirectory(include)
 add_subdirectory(src)
+enable_testing()
 add_subdirectory(test)
 

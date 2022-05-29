@@ -5,11 +5,13 @@
 #include <boost/pfr.hpp>
 #include <fmt/format.h>
 
+#include <concepts>
 #include <optional>
 #include <string>
 #include <vector>
 
-template <typename T> struct ConfigOption
+template <typename T>
+struct ConfigOption
 {
     /* Constructor for optional arguement */
     ConfigOption(std::string longName, T defaultArg, char shortName = '\0',
@@ -71,7 +73,8 @@ template <typename T> struct ConfigOption
     const std::string help_text;
 
 private:
-    template <typename Value> Value parse_detail(std::string_view) const
+    template <typename Value>
+    Value parse_detail(std::string_view) const
     {
         static_assert(sizeof(Value) == 0 && "There is no parser for type T");
     }
@@ -79,7 +82,8 @@ private:
     // ConfigOption<T>" template <> [[nodiscard]] int parse_detail(std::string_view arg) const This
     // is actually a bug in GCC: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85282 Workaround
     // below:
-    template <std::same_as<int> Value> [[nodiscard]] int parse_detail(std::string_view arg) const
+    template <std::same_as<int> Value>
+    [[nodiscard]] int parse_detail(std::string_view arg) const
     {
         try
         {
@@ -108,7 +112,8 @@ private:
     T _data;
 };
 
-template <> bool ConfigOption<bool>::parse(std::vector<std::string>& args)
+template <>
+bool ConfigOption<bool>::parse(std::vector<std::string>& args)
 /* We assume if this option is set, then it must be true */
 {
     for (auto iter = args.begin(); iter < args.end(); ++iter)
@@ -124,7 +129,8 @@ template <> bool ConfigOption<bool>::parse(std::vector<std::string>& args)
     return false;
 }
 
-template <typename F, typename ConfigT> bool visit_struct(F&& functor, ConfigT& config)
+template <typename F, typename ConfigT>
+bool visit_struct(F&& functor, ConfigT& config)
 {
     constexpr size_t struct_elems = boost::pfr::tuple_size<ConfigT>::value;
     return []<std::size_t... I>(F && functor, ConfigT & config, std::index_sequence<I...>)
@@ -134,7 +140,8 @@ template <typename F, typename ConfigT> bool visit_struct(F&& functor, ConfigT& 
     (functor, config, std::make_index_sequence<struct_elems>());
 }
 
-template <typename ConfigT> ConfigT parse_command_line(int argc, char* argv[])
+template <typename ConfigT>
+ConfigT parse_command_line(int argc, char* argv[])
 {
     // TODO: Ensure config does not contain multiple options with same name
     std::vector<std::string> args;
