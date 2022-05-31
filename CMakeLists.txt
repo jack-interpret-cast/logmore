@@ -28,6 +28,12 @@ FetchContent_Declare(googletest
         GIT_SHALLOW ON
         )
 FetchContent_MakeAvailable(googletest)
+
+set(CMAKE_CURSES_NEED_WIDE true)
+find_package(Curses REQUIRED)
+
+find_package(Boost REQUIRED COMPONENTS System)
+
 add_subdirectory(include)
 add_subdirectory(src)
 enable_testing()

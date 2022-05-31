@@ -1,8 +1,11 @@
+#include "logmore/file_handler.hpp"
 #include "logmore/parser.hpp"
+#include "logmore/terminal_handler.hpp"
 
 #include <fmt/chrono.h>
 
 #include <chrono>
+#include <ranges>
 
 struct Config
 {
@@ -24,15 +27,29 @@ int main(int argc, char* argv[])
 
     if (!config) return 1;
     fmt::print("Parse results:");
-    //               " {}, {}, {}, {}\n", config.number.get(), config.boolean.get(),
-    //               config.filename.get(), config.boolshort.get());
     auto functor = [](auto& config) {
         fmt::print("{}: {}, ", config.long_name, config.get());
         return true;
     };
     visit_struct(functor, config.value());
     fmt::print("\n");
-    auto delta = clock::now() - start;
-    fmt::print("tdelta: {}\n", std::chrono::duration_cast<std::chrono::microseconds>(delta));
+    auto mid = clock::now();
+
+    FileHandler file("test.log");
+    if (!file) return 1;
+    InputBuffer buff(file.get_buffer());
+    fmt::print("sz:{} chars\n", buff.data_size());
+    buff.load_data();
+    auto parsing = mid - start;
+    auto reading = clock::now() - mid;
+    fmt::print("parsing: {}, reading: {}, for: {} lines\n",
+               std::chrono::duration_cast<std::chrono::microseconds>(parsing),
+               std::chrono::duration_cast<std::chrono::microseconds>(reading), buff.num_lines());
+    //    buff.dump_data();
+
+    auto serv = boost::asio::io_service{};
+    TerminalHandler terminal{serv};
+    using namespace std::chrono_literals;
+    serv.run();
     return 0;
 }

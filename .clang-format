@@ -8,6 +8,7 @@ AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Custom
+BreakConstructorInitializers: BeforeComma
 BraceWrapping:
   AfterClass: true
   AfterStruct: true
