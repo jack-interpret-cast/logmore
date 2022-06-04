@@ -10,8 +10,6 @@ FetchContent_Declare(boost_pfr
         GIT_REPOSITORY https://github.com/boostorg/pfr.git
         GIT_TAG 2.0.3
         GIT_SHALLOW ON
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
         )
 FetchContent_MakeAvailable(boost_pfr)
 
@@ -28,6 +26,13 @@ FetchContent_Declare(googletest
         GIT_SHALLOW ON
         )
 FetchContent_MakeAvailable(googletest)
+
+FetchContent_Declare(magic_enum
+        GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+        GIT_TAG v0.8.0
+        GIT_SHALLOW ON
+        )
+FetchContent_MakeAvailable(magic_enum)
 
 set(CMAKE_CURSES_NEED_WIDE true)
 find_package(Curses REQUIRED)

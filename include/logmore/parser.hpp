@@ -141,6 +141,7 @@ template <>
 bool ConfigOption<bool>::parse(std::vector<std::string>& args)
 /* We assume if this option is set, then it must be true */
 {
+    if (args.empty()) return true;
     for (auto iter = args.begin(); iter < args.end(); ++iter)
     {
         if (auto pos = check_short_name_option(*iter); *iter == "--" + long_name || pos)
@@ -170,7 +171,7 @@ bool validate_config_struct(const ConfigT& config)
 {
     std::map<std::string_view, size_t> long_names;
     auto check_long_names = [&long_names](auto& config_opt) {
-        return long_names[config_opt.long_name]++;
+        return !config_opt.long_name.empty() && long_names[config_opt.long_name]++;
     };
     std::map<char, size_t> short_names;
     auto check_short_names = [&short_names](auto& config_opt) {
@@ -182,7 +183,7 @@ bool validate_config_struct(const ConfigT& config)
 }
 
 template <typename ConfigT>
-std::optional<ConfigT> parse_command_line(int argc, char* argv[])
+std::optional<ConfigT> parse_command_line(int argc, const char* argv[])
 {
     std::vector<std::string> args;
     for (ssize_t i = 1; i < argc; ++i)

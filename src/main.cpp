@@ -1,4 +1,5 @@
 #include "logmore/file_handler.hpp"
+#include "logmore/keys.hpp"
 #include "logmore/parser.hpp"
 #include "logmore/terminal_handler.hpp"
 
@@ -19,7 +20,7 @@ struct Config
     ConfigOption<std::string> filename{"filename"};
 };
 
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
     using clock = std::chrono::high_resolution_clock;
     auto start  = clock::now();
@@ -46,10 +47,9 @@ int main(int argc, char* argv[])
                std::chrono::duration_cast<std::chrono::microseconds>(parsing),
                std::chrono::duration_cast<std::chrono::microseconds>(reading), buff.num_lines());
     //    buff.dump_data();
-
-    auto serv = boost::asio::io_service{};
-    TerminalHandler terminal{serv};
-    using namespace std::chrono_literals;
+    auto serv        = boost::asio::io_service{};
+    auto key_handler = [&](Key key) { throw std::logic_error(fmt::format("{}", key)); };
+    TerminalHandler terminal{serv, key_handler};
     serv.run();
     return 0;
 }
