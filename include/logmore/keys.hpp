@@ -2,7 +2,7 @@
 
 #include <fmt/format.h>
 
-#define MAGIC_ENUM_RANGE_MAX 330
+#define MAGIC_ENUM_RANGE_MAX 360
 #include <magic_enum.hpp>
 
 #include <ostream>
@@ -50,7 +50,7 @@ struct Key
 
     // marking this consteval means this constructor can only be used at compile time
     // And also causes clang frontend to crash :(
-    explicit /*consteval*/ Key(char letter, KeySpecials special = KeySpecials::none)
+    explicit consteval Key(char letter, KeySpecials special = KeySpecials::none)
         : _letter{letter}
         , _special{special}
     {
@@ -66,11 +66,6 @@ struct Key
     key_t _value{0}; // value returned by ncurses
 };
 
-struct basic
-{
-    int x;
-};
-
 template <>
 struct fmt::formatter<Key>
 {
@@ -78,7 +73,7 @@ struct fmt::formatter<Key>
     constexpr auto parse(ParseContext& ctx)
     {
         return ctx.begin();
-    };
+    }
 
     template <typename FormatContext>
     auto format(Key const& key, FormatContext& ctx)
@@ -86,5 +81,5 @@ struct fmt::formatter<Key>
         return fmt::format_to(ctx.out(), "charint: {}, modifier: {}, value: {}, char: {}",
                               (int)key._letter, magic_enum::enum_name(key._special), key._value,
                               key._letter);
-    };
+    }
 };

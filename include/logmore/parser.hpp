@@ -12,25 +12,28 @@
 #include <vector>
 
 template <typename T>
-struct ConfigOption
+class ConfigOption
 {
+public:
     /* Constructor for optional arguement */
     ConfigOption(std::string longName, T defaultArg, char shortName = '\0',
                  std::string helpText = "")
-        : long_name(std::move(longName)),
-          short_name(shortName),
-          help_text(std::move(helpText)),
-          _data(std::move(defaultArg))
+        : long_name(std::move(longName))
+        , short_name(shortName)
+        , help_text(std::move(helpText))
+        , _data(std::move(defaultArg))
     {
     }
 
     /* Constructor for required arguement */
     explicit ConfigOption(std::string helpText) : help_text(std::move(helpText)) {}
 
+    bool is_default_arg() const { return long_name.empty(); }
+
     bool parse(std::vector<std::string>& args)
     {
         if (args.empty()) return true;
-        if (long_name.empty())
+        if (is_default_arg())
         {
             // this is default arg
             _data = parse_detail<T>(args.back());
@@ -138,30 +141,26 @@ private:
 };
 
 template <>
-bool ConfigOption<bool>::parse(std::vector<std::string>& args)
-/* We assume if this option is set, then it must be true */
-{
-    if (args.empty()) return true;
-    for (auto iter = args.begin(); iter < args.end(); ++iter)
-    {
-        if (auto pos = check_short_name_option(*iter); *iter == "--" + long_name || pos)
-        {
-            _data = true;
-            if (pos && iter->length() > 1) break;
-            args.erase(iter, iter + 1);
-            break;
-        }
-    }
-    return false;
-}
+bool ConfigOption<bool>::parse(std::vector<std::string>& args);
 
 template <typename F, typename ConfigT>
-bool visit_struct(F&& functor, ConfigT& config)
+bool visit_struct_with_error(F&& functor, ConfigT& config)
 {
     constexpr size_t struct_elems = boost::pfr::tuple_size<ConfigT>::value;
     return []<std::size_t... I>(F && functor, ConfigT & config, std::index_sequence<I...>)
     {
         return std::max({functor(boost::pfr::get<sizeof...(I) - 1U - I>(config))...});
+    }
+    (functor, config, std::make_index_sequence<struct_elems>());
+}
+
+template <typename F, typename ConfigT>
+void visit_struct(F&& functor, ConfigT& config)
+{
+    constexpr size_t struct_elems = boost::pfr::tuple_size<ConfigT>::value;
+    return []<std::size_t... I>(F && functor, ConfigT & config, std::index_sequence<I...>)
+    {
+        (functor(boost::pfr::get<sizeof...(I) - 1U - I>(config)), ...);
     }
     (functor, config, std::make_index_sequence<struct_elems>());
 }
@@ -177,8 +176,8 @@ bool validate_config_struct(const ConfigT& config)
     auto check_short_names = [&short_names](auto& config_opt) {
         return config_opt.short_name != '\0' && short_names[config_opt.short_name]++;
     };
-    bool short_dups = visit_struct(check_short_names, config);
-    bool long_dups  = visit_struct(check_long_names, config);
+    bool short_dups = visit_struct_with_error(check_short_names, config);
+    bool long_dups  = visit_struct_with_error(check_long_names, config);
     return short_dups || long_dups;
 }
 
@@ -189,8 +188,6 @@ std::optional<ConfigT> parse_command_line(int argc, const char* argv[])
     for (ssize_t i = 1; i < argc; ++i)
         args.emplace_back(argv[i]);
 
-    fmt::print("Got cmd args: {}\n", fmt::join(args, ","));
-
     ConfigT config;
     if (validate_config_struct(config))
     {
@@ -199,7 +196,7 @@ std::optional<ConfigT> parse_command_line(int argc, const char* argv[])
     }
 
     auto parse = [&args](auto& config_opt) { return config_opt.parse(args); };
-    if (visit_struct(parse, config))
+    if (visit_struct_with_error(parse, config))
     {
         fmt::print(fmt::style::warn, "There was an error parsing config options\n");
         return {};
@@ -210,4 +207,26 @@ std::optional<ConfigT> parse_command_line(int argc, const char* argv[])
         return {};
     }
     return config;
+}
+
+template <typename ConfigT>
+void print_config_help(std::string_view app_name)
+{
+    // strip off full path to executable
+    auto small_app_name = app_name.substr(app_name.find_last_of('/') + 1);
+
+    fmt::print("{0} config help:\n\n    {0} <options> ", small_app_name);
+
+    auto print_defaults = [](const auto& config_opt) {
+        if (config_opt.is_default_arg()) fmt::print("[{}] ", config_opt.help_text);
+    };
+    auto print_entry = [](const auto& config_opt) {
+        if (!config_opt.is_default_arg())
+            fmt::print("    -{:<2} --{:<15} {:<20}\n", config_opt.short_name, config_opt.long_name,
+                       config_opt.help_text);
+    };
+    ConfigT config{};
+    visit_struct(print_defaults, config);
+    fmt::print("\n");
+    visit_struct(print_entry, config);
 }

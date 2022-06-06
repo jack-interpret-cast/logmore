@@ -13,7 +13,7 @@ TEST(Parser, VisitStructAllMembers)
     MyStruct my_struct{};
     size_t count = 0;
     auto F       = [&count](const auto&) { return count++; };
-    visit_struct(F, my_struct);
+    visit_struct_with_error(F, my_struct);
     EXPECT_EQ(count, 2);
 }
 
@@ -109,7 +109,8 @@ TEST(ParseCmdLine, ComplexConfig)
 {
     const char* argv[] = {"\0",  "--bool", "-n",  "-123",    "--number4",
                           "567", "-dR",    "890", "filename"};
-    int argc           = sizeof(argv) / 8;
+
+    int argc = sizeof(argv) / 8;
 
     auto config = parse_command_line<ComplexConfig>(argc, argv);
     ASSERT_TRUE(config.has_value());

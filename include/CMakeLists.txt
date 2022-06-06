@@ -5,9 +5,15 @@ add_library(logmore_lib
         logmore/types.hpp
         logmore/file_handler.cpp
         logmore/file_handler.hpp
-        logmore/terminal_handler.cpp
-        logmore/terminal_handler.hpp
-        logmore/keys.hpp)
+        logmore/terminal.cpp
+        logmore/terminal.hpp
+        logmore/keys.hpp
+        logmore/config.hpp
+        logmore/controller.cpp
+        logmore/controller.hpp
+        logmore/application.cpp
+        logmore/application.hpp
+        )
 add_library(logmore::lib ALIAS logmore_lib)
 
 target_link_libraries(logmore_lib

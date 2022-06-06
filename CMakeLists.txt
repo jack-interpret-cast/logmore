@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
-project(src LANGUAGES CXX)
+project(logmore LANGUAGES CXX)
 
 include(cmake/project_settings.cmake)
 common_setup()
