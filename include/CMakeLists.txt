@@ -1,8 +1,5 @@
 add_library(logmore_lib
         STATIC
-        logmore/parser.cpp
-        logmore/parser.hpp
-        logmore/types.hpp
         logmore/file_handler.cpp
         logmore/file_handler.hpp
         logmore/terminal.cpp
@@ -22,9 +19,10 @@ target_link_libraries(logmore_lib
         fmt::fmt
         ${CURSES_LIBRARIES}
         magic_enum::magic_enum
+        fire::fire
 
         PRIVATE
-        logmore::compile_options
+        fire::project_options
         )
 target_include_directories(logmore_lib
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}

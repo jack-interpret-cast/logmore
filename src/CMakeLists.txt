@@ -7,5 +7,5 @@ target_link_libraries(logmore
         logmore::lib
 
         PRIVATE
-        logmore::compile_options
+        fire::project_options
         )

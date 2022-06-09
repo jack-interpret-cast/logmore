@@ -2,10 +2,18 @@ cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
 project(logmore LANGUAGES CXX)
 
-include(cmake/project_settings.cmake)
-common_setup()
 
 # Setup Externals
+include(FetchContent)
+FetchContent_Declare(fire
+        GIT_REPOSITORY /home/jc/CLionProjects/fire/
+        GIT_SHALLOW ON
+        )
+FetchContent_MakeAvailable(fire)
+include(${fire_SOURCE_DIR}/cmake/project_settings.cmake)
+common_setup()
+setup_utils()
+
 FetchContent_Declare(boost_pfr
         GIT_REPOSITORY https://github.com/boostorg/pfr.git
         GIT_TAG 2.0.3

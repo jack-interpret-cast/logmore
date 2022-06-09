@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.hpp"
+#include <fire/types.hpp>
 
 #include <fstream>
 #include <ranges>

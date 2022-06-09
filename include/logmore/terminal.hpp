@@ -1,11 +1,11 @@
 #pragma once
 
 #include "keys.hpp"
-#include "types.hpp"
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/posix/stream_descriptor.hpp>
 #include <boost/asio/signal_set.hpp>
+#include <fire/types.hpp>
 #include <sys/ioctl.h>
 
 #include <csignal>

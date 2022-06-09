@@ -2,8 +2,9 @@
 #include "logmore/config.hpp"
 #include "logmore/controller.hpp"
 #include "logmore/file_handler.hpp"
-#include "logmore/parser.hpp"
 #include "logmore/terminal.hpp"
+
+#include <fire/parser.hpp>
 
 int main(int argc, const char* argv[])
 {

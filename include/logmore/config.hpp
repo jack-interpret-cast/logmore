@@ -1,6 +1,6 @@
 #pragma once
 
-#include "parser.hpp"
+#include <fire/parser.hpp>
 
 struct Config
 {

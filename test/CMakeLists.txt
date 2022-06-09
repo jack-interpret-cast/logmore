@@ -4,7 +4,7 @@ add_executable(logmore_unit_tests
 target_link_libraries(logmore_unit_tests
         gtest_main
         logmore::lib
-        logmore::compile_options
+        fire::project_options
         )
 
 include(GoogleTest)
