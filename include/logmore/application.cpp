@@ -14,12 +14,13 @@ Application::Application(Config& config)
 {
 }
 
-void Application::start()
+int Application::start()
 {
+    if (!*_file)
+        return 1;
     _input->load_data();
     _event_loop.run();
+    return 0;
 }
 
 void Application::stop() { _event_loop.stop(); }
-
-bool Application::ready() { return *_file; }

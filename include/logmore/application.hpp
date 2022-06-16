@@ -16,9 +16,8 @@ public:
     Application(Config& config);
 
     // This method does not return and blocks until the application shuts down
-    void start();
+    int start();
     void stop();
-    bool ready();
 
 private:
     boost::asio::io_service _event_loop{};

@@ -17,11 +17,5 @@ int main(int argc, const char* argv[])
     }
 
     Application application{*config};
-
-    if (application.ready())
-        application.start();
-    else
-        return 1;
-
-    return 0;
+    return application.start();;
 }
