@@ -31,6 +31,7 @@ private:
     Terminal* _terminal;
     InputBuffer* _input;
     std::function<void()> _shutdown;
+    size_t _line_num{0};
 
     LogLevel _min_log_level{LogLevel::Debug};
 };

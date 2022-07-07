@@ -62,7 +62,7 @@ public:
      * Making this public is leaking an implementation detail, but only the caller knows if a
      * refresh is required, and refreshing on every update will result in poor performance
      */
-    void refresh() const;
+    void refresh();
 
 private:
     void get_signal();
@@ -70,9 +70,12 @@ private:
     void resize();
     coord dims() const;
 
+    void write_msg_line();
+    void write_command_line();
+
     // Helper func so we can template 'set_window_lines'
     // but keep the ncurses include inside the .cpp only
-    bool set_next_window_line(const Line&, int line_num);
+    bool write_next_window_line(const Line&, int line_num);
 
     struct cleanup_fn
     {
@@ -82,7 +85,8 @@ private:
     boost::asio::posix::stream_descriptor _input;
     boost::asio::signal_set _signal;
     std::function<void(const Key)> _input_handler;
-    size_t _cursor_offset{0};
+    std::string _msg_line;
+    std::string _cmd_line;
 };
 
 template <range_of<Line> R>
@@ -93,7 +97,7 @@ size_t Terminal::set_window_lines(R&& range, bool)
     for (const auto& line :
          range | std::views::take_while([&](const Line&) { return count < h - 2; }))
     {
-        set_next_window_line(line, count++);
+        write_next_window_line(line, count++);
     }
     return 0;
 }

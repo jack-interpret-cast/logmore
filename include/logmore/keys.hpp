@@ -13,8 +13,8 @@ enum class KeySpecials : int32_t {
     ctrl = -1,
     // Below keys map directly to values from ncurses
     // Above must be negative to prevent clashes
-    enter     = 13, // clashes with ctrl+m
-    esc       = 27, // clashes with alt+anything
+    enter     = 13,
+    esc       = 27,
     up        = 259,
     down      = 258,
     left      = 260,
@@ -23,6 +23,8 @@ enum class KeySpecials : int32_t {
     end       = 360,
     backspace = 263,
     del       = 330,
+    pgdn      = 338,
+    pgup      = 339,
 };
 
 struct Key
@@ -78,8 +80,13 @@ struct fmt::formatter<Key>
     template <typename FormatContext>
     auto format(Key const& key, FormatContext& ctx)
     {
-        return fmt::format_to(ctx.out(), "charint: {}, modifier: {}, value: {}, char: {}",
-                              (int)key._letter, magic_enum::enum_name(key._special), key._value,
-                              key._letter);
+        if (std::isprint(key._letter))
+            return fmt::format_to(ctx.out(), "charint: {}, modifier: {}, value: {}, char: {}",
+                                  (int)key._letter, magic_enum::enum_name(key._special), key._value,
+                                  key._letter);
+        else
+            return fmt::format_to(ctx.out(), "charint: {}, modifier: {}, value: {}",
+                                  (int)key._letter, magic_enum::enum_name(key._special),
+                                  key._value);
     }
 };

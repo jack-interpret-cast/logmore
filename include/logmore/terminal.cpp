@@ -50,6 +50,7 @@ Terminal::Terminal(boost::asio::io_service& serv, std::function<void(const Key)>
     }
     set_command_line("This is a test of the command line\n");
     set_msg_line(fmt::format("coords row: {}, col: {}, colours: {}", dims().h, dims().w, COLORS));
+    refresh();
 }
 
 void Terminal::cleanup_fn::operator()(_win_st* win) const
@@ -118,34 +119,38 @@ coord Terminal::dims() const
     return {maxcol, maxrow};
 }
 
-void Terminal::set_msg_line(std::string_view str)
-{
-    attrset(A_ITALIC);
-    ::attron(COLOR_PAIR(TextColour::message));
-    auto [w, h] = dims();
-    mvaddstr(h - 2, 0, fmt::format("{:*<{}}", str, w).c_str());
-    refresh();
-}
+void Terminal::set_msg_line(std::string_view str) { _msg_line = str; }
 
 void Terminal::set_command_line(std::string_view str)
 {
     if (std::iscntrl(str.back())) str.remove_suffix(1);
+    _cmd_line = str;
+}
+
+void Terminal::write_msg_line()
+{
+    attrset(A_ITALIC);
+    ::attron(COLOR_PAIR(TextColour::message));
+    auto [w, h] = dims();
+    mvaddstr(h - 2, 0, fmt::format("{:<{}}", _msg_line, w).c_str());
+}
+
+void Terminal::write_command_line()
+{
     attrset(A_BOLD);
     ::attron(COLOR_PAIR(TextColour::command));
     auto [w, h] = dims();
-    mvaddstr(h - 1, 0, fmt::format("{:<{}}", str, w).c_str());
-    _cursor_offset = str.length();
+    mvaddstr(h - 1, 0, fmt::format("{:<{}}", _cmd_line, w).c_str());
 }
 
-void Terminal::refresh() const
+void Terminal::refresh()
 {
-    auto [_, h] = dims();
-    // sets cursor position
-    ::move(h - 1, _cursor_offset);
+    write_msg_line();
+    write_command_line();
     ::refresh();
 }
 
-bool Terminal::set_next_window_line(const Line& line, int line_num)
+bool Terminal::write_next_window_line(const Line& line, int line_num)
 {
     attrset(A_NORMAL);
     ::attron(COLOR_PAIR(line.style));
