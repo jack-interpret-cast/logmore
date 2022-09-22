@@ -15,7 +15,8 @@ enum class LogLevel {
     Unknown = 4,
 };
 
-LogLevel get_line_log_level(std::string_view line, size_t log_start_idx = 25, size_t log_len = 10);
+LogLevel get_line_log_level(std::string_view line, ssize_t log_start_idx = 25,
+                            ssize_t log_len = 10);
 
 class Controller
 {
@@ -25,6 +26,9 @@ public:
     void key_handler(const Key& key);
 
 private:
+    enum class Mode { Normal, Search };
+    Mode _mode{Mode::Normal};
+
     void update_main_window();
 
     Terminal* _terminal;
@@ -33,4 +37,5 @@ private:
     ssize_t _line_num{0};
 
     LogLevel _min_log_level{LogLevel::DEBUG};
+    std::string _search;
 };

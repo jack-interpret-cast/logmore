@@ -1,5 +1,5 @@
 add_executable(logmore_unit_tests
-        parser_test.cpp
+        controller_test.cpp
         )
 target_link_libraries(logmore_unit_tests
         gtest_main

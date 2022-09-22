@@ -35,9 +35,12 @@ Terminal::Terminal(boost::asio::io_service& serv, std::function<void(const Key)>
     // Special colours for message & command lines
     ::init_pair((short)TextColour::message, (short)TextColour::black, (short)TextColour::orange);
     ::init_pair((short)TextColour::command, (short)TextColour::white, (short)TextColour::grey);
+    ::init_pair((short)TextColour::highlight, (short)TextColour::white, (short)TextColour::grey);
 
     get_signal();
     get_input();
+    ESCDELAY = 0; // ESC key input is not buffered
+    TABSIZE  = 1; // Make tabs only 1 space wide (simplifies logic elsewhere)
 
     // (TODO: rm): DEBUGGING
     attrset(A_NORMAL);
@@ -155,11 +158,14 @@ bool Terminal::write_next_window_line(const Line& line, int line_num)
     attrset(A_NORMAL);
     ::attron(COLOR_PAIR(line.style));
     auto [w, h] = dims();
-    if (line.highlights.empty())
+    mvaddstr(line_num, 0, fmt::format("{:<{}}", line.chars, w).c_str());
+
+    // Overwrite previous characters with the highlight here
+    for (const auto [begin, len] : line.highlights)
     {
-        mvaddstr(line_num, 0, fmt::format("{:<{}}", line.chars, w).c_str());
-    } else
-    {
+        attrset(A_BOLD);
+        ::attron(COLOR_PAIR(TextColour::highlight));
+        mvaddstr(line_num, begin, fmt::format("{}", line.chars.substr(begin, len), w).c_str());
     }
     return false;
 }

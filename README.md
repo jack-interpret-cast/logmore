@@ -22,8 +22,6 @@ ctest --preset debug
 # Development TODO
 
 - Write python script to generate a dummy logfile
-- Finish the log level filtering + tests
-- (g/G) skip to ends of file
 - Add forward mode to tail a file
 - Add line wrapping (possibly custom range adaptor)
 - Add search functionality + highlighting

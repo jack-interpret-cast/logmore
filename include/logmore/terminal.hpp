@@ -36,6 +36,7 @@ enum class TextColour {
     // These are not direct ncurses colours
     message,
     command,
+    highlight,
 };
 
 struct Line
@@ -47,8 +48,8 @@ struct Line
     TextColour style = TextColour::white;
     struct Highlight
     {
-        size_t _begin;
-        size_t _end;
+        ssize_t _begin;
+        ssize_t _length;
     };
     std::vector<Highlight> highlights{};
 };
@@ -68,12 +69,13 @@ public:
      * refresh is required, and refreshing on every update will result in poor performance
      */
     void refresh();
+    [[nodiscard]] ssize_t get_visible_lines() const { return dims().h - 2; }
 
 private:
+    coord dims() const;
     void get_signal();
     void get_input();
     void resize();
-    coord dims() const;
 
     void write_msg_line();
     void write_command_line();
