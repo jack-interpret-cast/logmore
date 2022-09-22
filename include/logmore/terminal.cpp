@@ -155,6 +155,11 @@ bool Terminal::write_next_window_line(const Line& line, int line_num)
     attrset(A_NORMAL);
     ::attron(COLOR_PAIR(line.style));
     auto [w, h] = dims();
-    mvaddstr(line_num, 0, fmt::format("{:<{}}", line.chars, w).c_str());
+    if (line.highlights.empty())
+    {
+        mvaddstr(line_num, 0, fmt::format("{:<{}}", line.chars, w).c_str());
+    } else
+    {
+    }
     return false;
 }

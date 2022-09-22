@@ -38,7 +38,7 @@ void InputBuffer::load_data()
     _data.pop_back();
 }
 
-size_t InputBuffer::data_size()
+ssize_t InputBuffer::data_size()
 {
     auto start = _stream.tellg();
     _stream.seekg(0, std::ios::end);

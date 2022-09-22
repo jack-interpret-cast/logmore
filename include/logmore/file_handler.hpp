@@ -34,9 +34,9 @@ public:
     using data_t = std::vector<std::string>;
     explicit InputBuffer(std::istream& stream) : _stream(stream){};
     void load_data();
-    size_t data_size(); // bytes
-    void dump_data();   // print data to console
-    size_t num_lines() { return _data.size(); };
+    ssize_t data_size(); // bytes
+    void dump_data();    // print data to console
+    ssize_t num_lines() { return _data.size(); };
     std::ranges::ref_view<data_t> get_range() { return std::views::all(_data); };
 
 private:

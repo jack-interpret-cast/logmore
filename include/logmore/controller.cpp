@@ -24,13 +24,13 @@ void Controller::key_handler(const Key& key)
 {
     _terminal->set_msg_line(fmt::format("{}", key));
     // Special key handling must come first to avoid conflicts due to overlap
-    if (key._special == KeySpecials::up && _line_num > 0)
+    if (key._special == KeySpecials::up)
     {
         _line_num--;
     } else if (key._special == KeySpecials::down)
     {
         _line_num++;
-    } else if (key._special == KeySpecials::pgup && _line_num > 10)
+    } else if (key._special == KeySpecials::pgup)
     {
         _line_num -= 10;
     } else if (key._special == KeySpecials::pgdn)
@@ -45,6 +45,7 @@ void Controller::key_handler(const Key& key)
         _terminal->set_msg_line(
             fmt::format("Updated min log level to {}", magic_enum::enum_name(_min_log_level)));
     }
+    _line_num = std::clamp<ssize_t>(_line_num, 0, _input->num_lines());
     update_main_window();
     _terminal->refresh();
 }

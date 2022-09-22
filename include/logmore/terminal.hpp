@@ -45,7 +45,12 @@ struct Line
 {
     std::string_view chars;
     TextColour style = TextColour::white;
-    std::vector<size_t> highlights{};
+    struct Highlight
+    {
+        size_t _begin;
+        size_t _end;
+    };
+    std::vector<Highlight> highlights{};
 };
 
 class Terminal
