@@ -2,7 +2,6 @@
 
 #include <fmt/format.h>
 
-#define MAGIC_ENUM_RANGE_MAX 360
 #include <magic_enum.hpp>
 
 #include <ostream>

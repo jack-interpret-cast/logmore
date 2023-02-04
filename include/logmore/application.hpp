@@ -13,7 +13,7 @@ class Controller;
 class Application
 {
 public:
-    Application(Config& config);
+    explicit Application(Config& config);
 
     // This method does not return and blocks until the application shuts down
     int start();

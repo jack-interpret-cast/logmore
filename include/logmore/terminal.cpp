@@ -35,7 +35,7 @@ Terminal::Terminal(boost::asio::io_service& serv, std::function<void(const Key)>
     // Special colours for message & command lines
     ::init_pair((short)TextColour::message, (short)TextColour::black, (short)TextColour::orange);
     ::init_pair((short)TextColour::command, (short)TextColour::white, (short)TextColour::grey);
-    ::init_pair((short)TextColour::highlight, (short)TextColour::white, (short)TextColour::grey);
+    ::init_pair((short)TextColour::highlight, (short)TextColour::white, (short)TextColour::purple);
 
     get_signal();
     get_input();

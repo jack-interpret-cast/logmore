@@ -3,6 +3,7 @@
 #include "keys.hpp"
 
 #include <functional>
+#include <algorithm>
 
 class Terminal;
 class InputBuffer;
@@ -17,6 +18,8 @@ enum class LogLevel {
 
 LogLevel get_line_log_level(std::string_view line, ssize_t log_start_idx = 25,
                             ssize_t log_len = 10);
+
+size_t find_fuzzy(std::string_view needle, std::string_view haystack, ssize_t start_pos = 0);
 
 class Controller
 {

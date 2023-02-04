@@ -17,5 +17,5 @@ int main(int argc, const char* argv[])
     }
 
     Application application{*config};
-    return application.start();;
+    return application.start();
 }

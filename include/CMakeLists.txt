@@ -13,6 +13,12 @@ add_library(logmore_lib
         )
 add_library(logmore::lib ALIAS logmore_lib)
 
+add_definitions(-DMAGIC_ENUM_RANGE_MAX=360)
+target_compile_options(logmore_lib
+        PUBLIC
+        -Wno-missing-field-initializers # For gcc
+        )
+
 target_link_libraries(logmore_lib
         PUBLIC
         Boost::pfr
@@ -24,6 +30,7 @@ target_link_libraries(logmore_lib
         PRIVATE
         fire::project_options
         )
+
 target_include_directories(logmore_lib
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
         )

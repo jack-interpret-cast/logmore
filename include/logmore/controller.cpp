@@ -8,10 +8,20 @@
 LogLevel get_line_log_level(std::string_view line, const ssize_t log_start_idx,
                             const ssize_t log_len)
 {
+    if (std::ssize(line) <= log_start_idx)
+        return LogLevel::Unknown;
     const auto level_str = line.substr(log_start_idx, log_len);
     for (const auto& [index, name] : magic_enum::enum_entries<LogLevel>())
         if (level_str.starts_with(name)) return LogLevel{index};
     return LogLevel::Unknown;
+}
+
+size_t find_fuzzy(std::string_view needle, std::string_view haystack, ssize_t start_pos)
+{
+    const auto it = std::ranges::search(haystack.substr(start_pos), needle, [](char c1, char c2) {
+        return std::tolower(c1) == std::tolower(c2);
+    });
+    return it.empty() ? std::string_view::npos : it.begin() - haystack.begin();
 }
 
 Controller::Controller(Terminal* terminal, InputBuffer* input, std::function<void()> shutdown)
@@ -43,9 +53,11 @@ void Controller::key_handler(const Key& key)
         } else if (key._letter == 'g')
         {
             _line_num = 0;
+            _terminal->set_msg_line("Skipping to line zero");
         } else if (key._letter == 'G')
         {
             _line_num = _input->num_lines();
+            _terminal->set_msg_line("Skipping to last line");
         } else if (key._letter == 'f')
         {
             _terminal->set_msg_line(
@@ -67,6 +79,9 @@ void Controller::key_handler(const Key& key)
         if (key._special == KeySpecials::enter)
         {
             _mode = Mode::Normal;
+        } else if (key._special == KeySpecials::backspace && !_search.empty())
+        {
+            _search.pop_back();
         } else if (key._special == KeySpecials::none)
             _search += key._letter;
         _terminal->set_command_line("/" + _search);
@@ -99,19 +114,26 @@ void Controller::update_main_window()
     auto do_search_highlight = [this](Line line) {
         if (!_search.empty())
         {
-
-            for (auto it = line.chars.find(_search); it != std::string_view::npos;
-                 it      = line.chars.find(_search, it + 1))
+            for (auto it = find_fuzzy(_search, line.chars); it != std::string_view::npos;
+                 it      = find_fuzzy(_search, line.chars, it + 1))
             {
                 line.highlights.push_back({._begin = ssize_t(it), ._length = std::ssize(_search)});
             }
+
+            /* // If we only needed case-exact search //
+            for (const auto word : line.chars | std::views::split(_search))
+            {
+                line.highlights.push_back({._begin = ssize_t(word.end()-line.chars.begin()),
+            ._length = std::ssize(_search)});
+            }
+            */
         }
         return line;
     };
     /* clang-format off */
     auto filtered_range = data_range
-                          | std::views::filter(log_level_filter)
                           | std::views::drop(_line_num)
+                          | std::views::filter(log_level_filter)
                           | std::views::transform(string_to_line)
                           | std::views::transform(do_search_highlight);
     /* clang-format on */

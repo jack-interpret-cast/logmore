@@ -37,7 +37,7 @@ FetchContent_MakeAvailable(googletest)
 
 FetchContent_Declare(magic_enum
         GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
-        GIT_TAG v0.8.0
+        GIT_TAG v0.8.1
         GIT_SHALLOW ON
         )
 FetchContent_MakeAvailable(magic_enum)
